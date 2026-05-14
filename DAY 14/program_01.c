@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/wait.h>
 
 int main() {
-    int x;
 
-    // Parent A reads input
+    int x;
+    int pipe_B[2], pipe_C[2];
+
+    pipe(pipe_B);
+    pipe(pipe_C);
+
     printf("Enter a number x: ");
     scanf("%d", &x);
 
@@ -15,65 +18,85 @@ int main() {
     pid_t pid_B = fork();
 
     if (pid_B == 0) {
-        // Child B: largest odd number < x
+
+        // Child B
+        close(pipe_B[0]);
+
         printf("B (PID: %d, PPID: %d)\n", getpid(), getppid());
-        
+
         int largest_odd = (x % 2 == 1) ? x - 2 : x - 1;
-        if (largest_odd < 1) largest_odd = -1; // Handle edge case
+
+        if (largest_odd < 1)
+            largest_odd = -1;
+
         printf("B: Largest odd number less than %d is %d\n", x, largest_odd);
 
-        // B creates its children D and E
-        pid_t pid_D = fork();
-        if (pid_D == 0) {
+        // D
+        if (fork() == 0) {
             printf("D (PID: %d, PPID: %d)\n", getpid(), getppid());
             exit(0);
         }
 
-        pid_t pid_E = fork();
-        if (pid_E == 0) {
+        // E
+        if (fork() == 0) {
             printf("E (PID: %d, PPID: %d)\n", getpid(), getppid());
             exit(0);
         }
 
-        // B waits for D and E
-        wait(NULL);
-        wait(NULL);
+        // signal parent A
+        write(pipe_B[1], "x", 1);
+
+        close(pipe_B[1]);
+
         exit(0);
     }
-    else if (pid_B > 0) {
-        pid_t pid_C = fork();
 
-        if (pid_C == 0) {
-            // Child C: largest even number < x
-            printf("C (PID: %d, PPID: %d)\n", getpid(), getppid());
-            
-            int largest_even = (x % 2 == 0) ? x - 2 : x - 1;
-            if (largest_even < 0) largest_even = -2; // Handle edge case
-            printf("C: Largest even number less than %d is %d\n", x, largest_even);
+    pid_t pid_C = fork();
 
-            // C creates its children F and G
-            pid_t pid_F = fork();
-            if (pid_F == 0) {
-                printf("F (PID: %d, PPID: %d)\n", getpid(), getppid());
-                exit(0);
-            }
+    if (pid_C == 0) {
 
-            pid_t pid_G = fork();
-            if (pid_G == 0) {
-                printf("G (PID: %d, PPID: %d)\n", getpid(), getppid());
-                exit(0);
-            }
+        // Child C
+        close(pipe_C[0]);
 
-            // C waits for F and G
-            wait(NULL);
-            wait(NULL);
+        printf("C (PID: %d, PPID: %d)\n", getpid(), getppid());
+
+        int largest_even = (x % 2 == 0) ? x - 2 : x - 1;
+
+        if (largest_even < 0)
+            largest_even = -2;
+
+        printf("C: Largest even number less than %d is %d\n", x, largest_even);
+
+        // F
+        if (fork() == 0) {
+            printf("F (PID: %d, PPID: %d)\n", getpid(), getppid());
             exit(0);
         }
+
+        // G
+        if (fork() == 0) {
+            printf("G (PID: %d, PPID: %d)\n", getpid(), getppid());
+            exit(0);
+        }
+
+        // signal parent A
+        write(pipe_C[1], "x", 1);
+
+        close(pipe_C[1]);
+
+        exit(0);
     }
 
-    // Parent A waits for B and C
-    wait(NULL);
-    wait(NULL);
+    // Parent A waits using blocking read()
+    close(pipe_B[1]);
+    close(pipe_C[1]);
+
+    char temp;
+
+    read(pipe_B[0], &temp, 1);
+    read(pipe_C[0], &temp, 1);
+
     printf("Parent A finished.\n");
+
     return 0;
 }
