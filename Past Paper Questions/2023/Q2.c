@@ -21,7 +21,6 @@ int multiplication(void *arg)
     return 0;
 }
 
-// Function for division
 int division(void *arg)
 {
     if (b != 0)
