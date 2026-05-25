@@ -14,11 +14,6 @@ int main() {
 
     printf("[Parent] PID: %d - Enter number of integers: ", getpid());
 
-    if (scanf("%d", &n) <= 0 || n <= 0) {
-        fprintf(stderr, "Invalid input.\n");
-        return 1;
-    }
-
     pid_t pid1 = fork();
 
     if (pid1 < 0) {
@@ -30,11 +25,6 @@ int main() {
     if (pid1 == 0) {
 
         pid_t pid2 = fork();
-
-        if (pid2 < 0) {
-            perror("Grandchild fork failed");
-            exit(1);
-        }
 
         // ----- GRANDCHILD PROCESS -----
         if (pid2 == 0) {
