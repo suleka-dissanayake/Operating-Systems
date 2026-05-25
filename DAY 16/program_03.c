@@ -6,12 +6,6 @@ int main() {
     int pipeA[2], pipeB[2], pipeC[2];
     int n, i;
 
-    // Create pipes
-    if (pipe(pipeA) == -1 || pipe(pipeB) == -1 || pipe(pipeC) == -1) {
-        perror("Pipe failed");
-        return 1;
-    }
-
     printf("[Parent] PID: %d - Enter number of integers: ", getpid());
 
     pid_t pid1 = fork();
