@@ -7,8 +7,10 @@ int main() {
     scanf("%d", &n);
     int c = fork();
     
-    if (c == 0) printf("%d * 2 = %d\n", n, n * 2);
-    else printf("%d / 2 = %d\n", n, n / 2);
+    if (c == 0) 
+        printf("%d * 2 = %d\n", n, n * 2);
+    else 
+        printf("%d / 2 = %d\n", n, n / 2);
 
     return 0;
 }

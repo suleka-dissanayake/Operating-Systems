@@ -4,7 +4,7 @@ int main() {
     int age = 20;
     float height = 5.8;
     char grade = 'A';
-    char name[] = "ABC";
+    char* name = "ABC";
     
     printf("Age is %d\n", age);
     printf("Height is %.2f\n", height);
