@@ -3,107 +3,101 @@
 #include <stdlib.h>
 
 int main() {
-    int index = 372;  // Number to process
+    int index = 372;
 
-    // Pipes:
-    // AB: A → B
-    // BA: B → A
-    // AC: A → C
-    // CA: C → A
     int pipeAB[2], pipeBA[2];
     int pipeAC[2], pipeCA[2];
 
-    // Create pipes
     pipe(pipeAB);
     pipe(pipeBA);
-    pipe(pipeAC);   // FIXED (was PPID)
+    pipe(pipeAC);
     pipe(pipeCA);
 
-    // Create process B
-    int B = fork();
+    pid_t B = fork();
 
     if (B == 0) {
-        // CHILD PROCESS B
+        /* Process B */
 
-        close(pipeAB[1]); // Close write end (B only reads from A)
-        close(pipeBA[0]); // Close read end (B only writes to A)
+        close(pipeAB[1]);
+        close(pipeBA[0]);
 
         int num;
-        read(pipeAB[0], &num, sizeof(num)); // Read number from A
-        close(pipeAB[0]);
+        read(pipeAB[0], &num, sizeof(num));
 
-        printf("Process B (PID - %d, PPID - %d)\n", getpid(), getppid());
+        printf("Process B (PID=%d, PPID=%d)\n", getpid(), getppid());
 
-        // Calculate sum of digits
-        int n = num, sum = 0;
-        while (n > 0) {
-            sum += n % 10;
-            n /= 10;
+        int sum = 0;
+        while (num > 0) {
+            sum += num % 10;
+            num /= 10;
         }
 
-        write(pipeBA[1], &sum, sizeof(sum)); // Send result to A
+        write(pipeBA[1], &sum, sizeof(sum));
+
+        close(pipeAB[0]);
         close(pipeBA[1]);
 
-        return 0;
+        exit(0);
     }
+    else {
+        /* Only Process A creates Process C */
 
-    // Create process C
-    int C = fork();
+        pid_t C = fork();
 
-    if (C == 0) {
-        // CHILD PROCESS C
+        if (C == 0) {
+            /* Process C */
 
-        close(pipeAC[1]); // Close write end (C reads only)
-        close(pipeCA[0]); // Close read end (C writes only)
+            close(pipeAC[1]);
+            close(pipeCA[0]);
 
-        int num;
-        read(pipeAC[0], &num, sizeof(num)); // Read number from A
-        close(pipeAC[0]);
+            int num;
+            read(pipeAC[0], &num, sizeof(num));
 
-        printf("Process C (PID - %d, PPID - %d)\n", getpid(), getppid());
+            printf("Process C (PID=%d, PPID=%d)\n", getpid(), getppid());
 
-        // Check if even or odd
-        int check = (num % 2 == 0) ? 1 : 0;
+            int check = (num % 2 == 0) ? 1 : 0;
 
-        write(pipeCA[1], &check, sizeof(check)); // Send result to A
-        close(pipeCA[1]);
+            write(pipeCA[1], &check, sizeof(check));
 
-        return 0;
-    }
+            close(pipeAC[0]);
+            close(pipeCA[1]);
 
-    // PARENT PROCESS A
-    printf("Process A (PID - %d, PPID - %d), index - %d\n",
-           getpid(), getppid(), index);
+            exit(0);
+        }
+        else {
+            /* Parent Process A */
 
-    // Send data to B
-    close(pipeAB[0]); // Close read end
-    write(pipeAB[1], &index, sizeof(index)); // FIXED (was WRITE)
-    close(pipeAB[1]);
+            printf("Process A (PID=%d, PPID=%d), Index=%d\n", getpid(), getppid(), index);
 
-    // Send data to C
-    close(pipeAC[0]); // Close read end
-    write(pipeAC[1], &index, sizeof(index));
-    close(pipeAC[1]);
+            /* Send number to B */
+            close(pipeAB[0]);
+            write(pipeAB[1], &index, sizeof(index));
+            close(pipeAB[1]);
 
-    // Receive result from B
-    close(pipeBA[1]); // Close write end
-    int sum;
-    read(pipeBA[0], &sum, sizeof(sum)); // FIXED (missing semicolon)
-    close(pipeBA[0]);
+            /* Send number to C */
+            close(pipeAC[0]);
+            write(pipeAC[1], &index, sizeof(index));
+            close(pipeAC[1]);
 
-    // Receive result from C
-    close(pipeCA[1]); // Close write end
-    int check;
-    read(pipeCA[0], &check, sizeof(check));
-    close(pipeCA[0]);
+            /* Receive from B */
+            close(pipeBA[1]);
+            int sum;
+            read(pipeBA[0], &sum, sizeof(sum));
+            close(pipeBA[0]);
 
-    // Display results
-    printf("Digit sum received from B = %d\n", sum);
+            /* Receive from C */
+            close(pipeCA[1]);
+            int check;
+            read(pipeCA[0], &check, sizeof(check));
+            close(pipeCA[0]);
 
-    if (check == 1) {
-        printf("C says: %d is Even\n", index);
-    } else {
-        printf("C says: %d is Odd\n", index);
+            printf("Digit sum received from B = %d\n", sum);
+
+            if (check)
+                printf("C says: %d is Even\n", index);
+            else
+                printf("C says: %d is Odd\n", index);
+        }
     }
 
     return 0;

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 int main() {
-
     int x;
     int pipe_B[2], pipe_C[2];
 
