@@ -26,48 +26,32 @@ int main() {
 
     // Subtraction
     if (fork() == 0) {
-
         close(pipe2[0]);
-
         printf("Subtraction: %d\n", n1 - n2);
-
         write(pipe2[1], "x", 1);
-
         close(pipe2[1]);
-
         exit(0);
     }
 
     // Multiplication
     if (fork() == 0) {
-
         close(pipe3[0]);
-
         printf("Multiplication: %d\n", n1 * n2);
-
         write(pipe3[1], "x", 1);
-
         close(pipe3[1]);
-
         exit(0);
     }
 
     // Division
     if (fork() == 0) {
-
         close(pipe4[0]);
-
         printf("Division: %d\n", n1 / n2);
-
         write(pipe4[1], "x", 1);
-
         close(pipe4[1]);
-
         exit(0);
     }
 
     // Parent waits using pipes
-
     read(pipe1[0], &temp, 1);
     read(pipe2[0], &temp, 1);
     read(pipe3[0], &temp, 1);
