@@ -3,11 +3,8 @@
 #include <stdlib.h>
 
 int main() {
-
     int n1, n2;
-
     int pipe1[2], pipe2[2], pipe3[2], pipe4[2];
-
     char temp;
 
     pipe(pipe1);
@@ -16,20 +13,14 @@ int main() {
     pipe(pipe4);
 
     printf("Enter two numbers: ");
-
     scanf("%d %d", &n1, &n2);
 
     // Addition
     if (fork() == 0) {
-
         close(pipe1[0]);
-
         printf("Addition: %d\n", n1 + n2);
-
         write(pipe1[1], "x", 1);
-
         close(pipe1[1]);
-
         exit(0);
     }
 
