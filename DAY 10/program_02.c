@@ -4,7 +4,6 @@
 #include <string.h>
 
 int main() {
-
     int pipefd[2];
 
     if (pipe(pipefd) == -1) {
@@ -20,15 +19,11 @@ int main() {
     }
 
     if (childpid == 0) {
-
         // Child process
 
         close(pipefd[0]);
-
         const char *message = "Hello from child!";
-
-        ssize_t bytesWritten =
-            write(pipefd[1], message, strlen(message));
+        ssize_t bytesWritten = write(pipefd[1], message, strlen(message));
 
         if (bytesWritten == -1) {
             perror("write");
@@ -36,28 +31,20 @@ int main() {
         }
 
         close(pipefd[1]);
-
         exit(EXIT_SUCCESS);
 
     } else {
-
         // Parent process
-
         close(pipefd[1]);
-
         char buffer[100];
-
-        ssize_t bytesRead =
-            read(pipefd[0], buffer, sizeof(buffer));
+        ssize_t bytesRead = read(pipefd[0], buffer, sizeof(buffer));
 
         if (bytesRead == -1) {
             perror("read");
             exit(EXIT_FAILURE);
         }
 
-        printf("Parent process: Received message from child: %.*s\n",
-               (int)bytesRead, buffer);
-
+        printf("Parent process: Received message from child: %.*s\n", (int)bytesRead, buffer);
         close(pipefd[0]);
     }
 
